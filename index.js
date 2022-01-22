@@ -47,12 +47,14 @@ function getSuggestion(wordlist, currentWord, misplaced, wrongLetters) {
         const hasRightLetters = _.every(currentWord, (c, i) => c === '-' || w[i] === c);
         if (!hasRightLetters) return false;
 
-        const containsMisplaced = _.every(misplaced, (m, i) => m === '-' || (w.includes(m) && w[i] !== m));
+        const containsMisplaced = _.every(misplaced, ms => _.every(ms, (m, i) => m === '-' || (w.includes(m) && w[i] !== m)));
         const hasNoWrongLetters = _.every(w, c => !wrongLetters.includes(c));
 
         return containsMisplaced
             && hasNoWrongLetters;
     });
+
+    console.log(`Word pool remaining: ${suggestions.length}`);
 
     const suggestion = _.sample(suggestions);
     if (confirmSuggestion(suggestion)) {
@@ -73,36 +75,42 @@ function askResult(wordLen) {
     return result;
 }
 
+function replaceCharAtIndex(word, char, index) {
+    const wordArray = word.split('');
+    wordArray[index] = char;
+    return wordArray.join('');
+}
+
 function main() {
     const { lang, wordLen } = askParams();
     let wordlist = getWordlist(lang, wordLen);
 
     let wrongLetters = '';
-    let misplaced = ''.padStart(wordLen, '-');
+    let misplaced = [''.padStart(wordLen, '-')];
     let currentWord = ''.padStart(wordLen, '-');
 
     let suggestion = '';
+    let attemptCount = 1;
 
     while (currentWord.includes('-')) {
+        console.log(`\n#### Attempt ${attemptCount} ####\n`);
+
         suggestion = suggestion
             ? getSuggestion(wordlist, currentWord, misplaced, wrongLetters)
             : getFirstSuggestion(wordlist, wordLen);
 
         const result = askResult(wordLen);
 
-        misplaced = ''.padStart(wordLen, '-');
+        misplaced.push(''.padStart(wordLen, '-'));
+        const mIndex = misplaced.length - 1;
 
         _.each(suggestion, (s, idx) => {
             switch (result[idx]) {
                 case 'o':
-                    const currentWordArray = currentWord.split('');
-                    currentWordArray[idx] = s;
-                    currentWord = currentWordArray.join('');
+                    currentWord = replaceCharAtIndex(currentWord, s, idx);
                     break;
                 case '-':
-                    const misplacedArray = misplaced.split('');
-                    misplacedArray[idx] = s;
-                    misplaced = misplacedArray.join('');
+                    misplaced[mIndex] = replaceCharAtIndex(misplaced[mIndex], s, idx);
                     break;
                 case 'x':
                     wrongLetters += s;
