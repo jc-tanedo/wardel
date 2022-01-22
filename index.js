@@ -25,7 +25,7 @@ function getWordlist(lang, wordLen) {
 }
 
 function confirmSuggestion(suggestion) {
-    console.log(`\nSuggested word:\t${suggestion}\n`);
+    console.log(`Suggested word:\t${suggestion}`);
     return true;
     // const useWord = _.toLower(prompt('Use this word? [Yn]: ')) || 'y';
     // return useWord === 'y';
@@ -53,8 +53,6 @@ function getSuggestion(wordlist, currentWord, misplaced, wrongLetters) {
         return containsMisplaced
             && hasNoWrongLetters;
     });
-
-    console.log(`Word pool remaining: ${suggestions.length}`);
 
     const suggestion = _.sample(suggestions);
     if (confirmSuggestion(suggestion)) {
@@ -90,10 +88,11 @@ function main() {
     let currentWord = ''.padStart(wordLen, '-');
 
     let suggestion = '';
-    let attemptCount = 1;
+    let attemptCount = 0;
 
     while (currentWord.includes('-')) {
-        console.log(`\n#### Attempt ${attemptCount} ####\n`);
+        attemptCount += 1;
+        console.log(`\n#### Attempt ${attemptCount} ####`);
 
         suggestion = suggestion
             ? getSuggestion(wordlist, currentWord, misplaced, wrongLetters)
@@ -113,6 +112,7 @@ function main() {
                     misplaced[mIndex] = replaceCharAtIndex(misplaced[mIndex], s, idx);
                     break;
                 case 'x':
+                    if (currentWord.includes(s)) break;
                     wrongLetters += s;
             }
         });
